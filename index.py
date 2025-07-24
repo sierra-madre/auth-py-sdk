@@ -1,14 +1,16 @@
 from app import  app
 from utils.db import db
+from flask_migrate import Migrate
+
 import os
 
 from dotenv import load_dotenv
 load_dotenv()
 
-"""
-from flask_migrate import Migrate
+
+
 migrate = Migrate(app, db)
-"""
+
 
 db.init_app(app)
 

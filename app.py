@@ -1,6 +1,6 @@
 from flask import Flask
 from dotenv import load_dotenv
-#from flask_migrate import Migrate
+
 from utils.db import db
 from flask_cors import CORS
 
