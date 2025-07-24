@@ -1,5 +1,5 @@
 from app import  app
-
+from utils.db import db
 import os
 
 from dotenv import load_dotenv
@@ -7,14 +7,15 @@ load_dotenv()
 
 """
 from flask_migrate import Migrate
-
+migrate = Migrate(app, db)
+"""
 
 db.init_app(app)
 
-migrate = Migrate(app, db)
+
 with app.app_context():
     db.create_all()
-"""
+
 
 
 

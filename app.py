@@ -1,7 +1,7 @@
 from flask import Flask
 from dotenv import load_dotenv
 #from flask_migrate import Migrate
-#from flask_sqlalchemy import SQLAlchemy
+from utils.db import db
 #from flask_cors import CORS
 
 import os
@@ -13,8 +13,7 @@ load_dotenv()
 app = Flask(__name__)
 
 #CORS(app)
-#app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("CADENA_CONEXION_BASE_DE_DATOS")
-#SQLAlchemy(app)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_CONNECTION_STRING")
 
 
 @app.route("/ping")
