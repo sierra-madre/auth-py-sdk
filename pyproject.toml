@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "sierra_madre_auth"
+version = "0.1.0"
+description = "Reusable auth sdk for flask"
+authors = ["Alexander Ríos"]
+packages = [{ include = "sierra_madre_auth" }]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+sierra_madre_core = { path = "../core-py-sdk", develop = true }
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
