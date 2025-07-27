@@ -21,9 +21,9 @@ def generate_jwt(user_id: str, config: AuthConfig) -> str:
     payload = {
         "id_user": user_id,
         "timestamp": datetime.utcnow().isoformat(),
-        "exp": datetime.utcnow() + timedelta(minutes=config.token_expiration_time_minutes)  # o el tiempo que quieras
+        "exp": datetime.utcnow() + timedelta(minutes=config.token_config.token_expiration_time_minutes)  # o el tiempo que quieras
     }
-    token = jwt.encode(payload, config.password_hash_key, algorithm=config.algorithm)
+    token = jwt.encode(payload, config.password_config.password_hash_key, algorithm=config.password_config.algorithm)
     return token
 
 def decode_jwt(token: str, config: AuthConfig) -> dict:
