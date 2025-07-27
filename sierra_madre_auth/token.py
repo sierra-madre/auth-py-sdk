@@ -1,34 +1,22 @@
-from functools import wraps
-from flask import request, jsonify
 from sierra_madre_core.errors import HTTPError
-from sierra_madre_core.schemas import ValidationError
-from sierra_madre_auth.config import AuthConfig
 
 import jwt
 from jwt import ExpiredSignatureError, InvalidTokenError
 from datetime import datetime, timedelta
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-ALGORITHM = "HS256"
-
-
-def generate_jwt(user_id: str, config: AuthConfig) -> str:
+def generate_jwt(user_id: str, secret_key: str, algorithm: str, expiration_time_minutes: int) -> str:
     payload = {
         "id_user": user_id,
         "timestamp": datetime.utcnow().isoformat(),
-        "exp": datetime.utcnow() + timedelta(minutes=config.token_config.token_expiration_time_minutes)  # o el tiempo que quieras
+        "exp": datetime.utcnow() + timedelta(minutes=expiration_time_minutes)  
     }
-    token = jwt.encode(payload, config.password_config.password_hash_key, algorithm=config.password_config.algorithm)
+    token = jwt.encode(payload, secret_key, algorithm=algorithm)
     return token
 
-def decode_jwt(token: str, config: AuthConfig) -> dict:
+def decode_jwt(token: str, secret_key: str, algorithm: str) -> dict:
     try:
-        payload = jwt.decode(token, config.password_hash_key, algorithms=[config.algorithm])
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
         return payload
     except ExpiredSignatureError:
         raise HTTPError("Token expired", 401)
@@ -37,10 +25,3 @@ def decode_jwt(token: str, config: AuthConfig) -> dict:
 
 
 
-def validate_token():
-    token = request.headers.get("Authorization")
-    token = token.split(" ")
-    if token[0] != "Bearer":
-        raise HTTPError("Invalid token", 401)
-    token = token[1]
-    return decode_jwt(token)["id_user"]
