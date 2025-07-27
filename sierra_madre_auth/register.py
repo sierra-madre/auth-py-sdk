@@ -6,12 +6,15 @@ from sierra_madre_auth.models import Users
 from sierra_madre_auth.config import AuthConfig
 #Register user, must be used with handle_endpoint decorator from sierra_madre_core
 def register_user(auth_config: AuthConfig):
+    print(auth_config.autoconfirm_users)
     user = RegisterUserRequestSchema.model_validate(request.json)
+    #Verify if password is valid according to the password config
     auth_config.password_config.validate_password_security_level(user.password)
     if get_user_by_email(user.email):
         raise HTTPError("Email already exists", 400)
-    #Verify if password is valid according to the password config
-    auth_config.password_config.validate_password_security_level(user.password)
+    #Create user in database
     user = Users(user.email, user.password)
+    if auth_config.autoconfirm_users:
+        user.confirmed = True
     user.save()
     return jsonify({"message": "User registered successfully"}), 201

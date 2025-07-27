@@ -53,9 +53,10 @@ class TokenConfig:
 
 
 class AuthConfig:
-    def __init__(self, password_hash_key, algorithm="HS256", token_expiration_time_minutes=60, password_security_level=1, password_min_length=8):
+    def __init__(self, password_hash_key, algorithm="HS256", token_expiration_time_minutes=60, password_security_level=1, password_min_length=8, autoconfirm_users=False):
         self.password_config = PasswordConfig(password_hash_key, algorithm, password_security_level, password_min_length)
         self.token_config = TokenConfig(token_expiration_time_minutes)
+        self.autoconfirm_users = autoconfirm_users
 
     def update_password_security_level(self, password_security_level):
         self.password_config.password_security_level = password_security_level

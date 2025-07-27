@@ -8,7 +8,7 @@ class Users(ModelTimeStamp):
     user_id = db.Column(db.String(255), primary_key=True, default=lambda: str(uuid.uuid4()))
     email = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    is_active = db.Column(db.Boolean, default=True)
+    confirmed = db.Column(db.Boolean, default=False)
 
     def __init__(self, email, password):
         self.email = email
