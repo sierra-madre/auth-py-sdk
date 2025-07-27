@@ -1,11 +1,5 @@
 from sierra_madre_core.errors import HTTPError
 
-class AuthConfig:
-    def __init__(self, password_hash_key, algorithm="HS256", token_expiration_time_minutes=60):
-        self.password_hash_key = password_hash_key
-        self.algorithm = algorithm
-        self.token_expiration_time_minutes = token_expiration_time_minutes
-
 
 
 class PasswordConfig:
@@ -18,7 +12,7 @@ class PasswordConfig:
     def validate_password_security_level(self, password):
         #Validate password length
         if len(password) < self.password_min_length:
-            raise HTTPError("Password must be at least 8 characters long", 400)
+            raise HTTPError(f"Password must be at least {self.password_min_length} characters long", 400)
         
         #Validate password security level
         #Level 1 no minimum requirements
@@ -52,9 +46,22 @@ class PasswordConfig:
             if not any(char in "!@#$%^&*()_+-=[]{}|;:,.<>?" for char in password):
                 raise HTTPError("Password must contain at least one special character", 400)
 
-        
-
 
 class TokenConfig:
     def __init__(self, token_expiration_time_minutes=60):
         self.token_expiration_time_minutes = token_expiration_time_minutes
+
+
+class AuthConfig:
+    def __init__(self, password_hash_key, algorithm="HS256", token_expiration_time_minutes=60, password_security_level=1, password_min_length=8):
+        self.password_config = PasswordConfig(password_hash_key, algorithm, password_security_level, password_min_length)
+        self.token_config = TokenConfig(token_expiration_time_minutes)
+
+    def update_password_security_level(self, password_security_level):
+        self.password_config.password_security_level = password_security_level
+
+    def update_password_min_length(self, password_min_length):
+        self.password_config.password_min_length = password_min_length
+
+    def update_token_expiration_time_minutes(self, token_expiration_time_minutes):
+        self.token_config.token_expiration_time_minutes = token_expiration_time_minutes
