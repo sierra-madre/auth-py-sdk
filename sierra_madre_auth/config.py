@@ -65,3 +65,7 @@ class AuthConfig:
 
     def update_token_expiration_time_minutes(self, token_expiration_time_minutes):
         self.token_config.token_expiration_time_minutes = token_expiration_time_minutes
+
+
+def get_auth_config(config_dict: dict) -> AuthConfig:
+    return AuthConfig(**config_dict)
