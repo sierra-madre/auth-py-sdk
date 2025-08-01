@@ -29,6 +29,8 @@ def login_user(auth_config: AuthConfig):
     # Generate access token (short lived)
     access_token = generate_jwt(
         db_user.user_id, 
+        #Sending email as name for now
+        db_user.email,
         auth_config.password_config.password_hash_key, 
         auth_config.password_config.algorithm, 
         auth_config.token_config.token_expiration_time_minutes
@@ -37,6 +39,8 @@ def login_user(auth_config: AuthConfig):
     # Generate refresh token (long lived)
     refresh_token = generate_refresh_token(
         db_user.user_id,
+        #Sending email as name for now
+        db_user.email,
         auth_config.password_config.password_hash_key,
         auth_config.password_config.algorithm
     )
@@ -70,7 +74,7 @@ def refresh_token(auth_config: AuthConfig):
     """
     refresh_token = request.cookies.get('refresh_token')
     if not refresh_token:
-        raise HTTPError("Refresh token not found", 401)
+        raise HTTPError("Refresh token not found", 403)
     
     try:
         # Decode refresh token
@@ -116,20 +120,20 @@ def get_current_user(auth_config: AuthConfig):
             auth_config.password_config.algorithm
         )
         
+        
         user_id = payload.get("id_user")
         if not user_id:
-            raise HTTPError("Invalid refresh token", 401)
+            raise HTTPError("Invalid refresh token", 403)
         
         # Get user from database
-        db_user = get_user_by_id(user_id)
-        if not db_user:
-            raise HTTPError("User not found", 404)
+        
+        
+            
         
         return jsonify({
             "user": {
-                "user_id": db_user.user_id,
-                "email": db_user.email,
-                "confirmed": db_user.confirmed
+                "user_id": payload.get("id_user"),
+                "name": payload.get("name"),
             }
         }), 200
         
@@ -145,10 +149,11 @@ def logout_user():
     response.delete_cookie('refresh_token')
     return response, 200
 
-def generate_refresh_token(user_id: str, secret_key: str, algorithm: str) -> str:
+def generate_refresh_token(user_id: str, name: str, secret_key: str, algorithm: str) -> str:
     """Generate a long-lived refresh token"""
     payload = {
         "id_user": user_id,
+        "name": name,
         "timestamp": datetime.utcnow().isoformat(),
         "exp": datetime.utcnow() + timedelta(days=7),  # 7 days
         "type": "refresh"

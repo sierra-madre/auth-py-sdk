@@ -3,6 +3,7 @@ from functools import wraps
 from flask import request, jsonify
 from sierra_madre_core.schemas import ValidationError
 from sierra_madre_auth.token import decode_jwt
+from traceback import format_exc
 
 
 class PasswordConfig:
@@ -70,7 +71,7 @@ class AuthConfig:
     def update_token_expiration_time_minutes(self, token_expiration_time_minutes):
         self.token_config.token_expiration_time_minutes = token_expiration_time_minutes
 
-    def handle_secure_endpoint(self, custom_error=400):
+    def handle_secure_endpoint(self, custom_error=400, debug=False):
         """
         Decorator method that validates JWT token before executing the endpoint function.
         Similar to Flask's @route decorator but with authentication.
@@ -79,12 +80,16 @@ class AuthConfig:
             @wraps(func)
             def wrapper(*args, **kwargs):
                 try:
-                    request.id_user = self.validate_token()
+                    request.user_id = self.validate_token()
                     response = func(*args, **kwargs)
                     return response
                 except HTTPError as http_ex:
+                    if debug:
+                        print(format_exc())
                     return jsonify({"error": http_ex.message}), http_ex.status_code
                 except ValidationError as e:
+                    if debug:
+                        print(format_exc())
                     custom_errors = []
                     for err in e.errors():
                         field_name = ".".join(str(loc) for loc in err["loc"]) or "input"
@@ -95,11 +100,20 @@ class AuthConfig:
                     error = " ,".join(custom_errors)
                     return jsonify({"error": error}), 400
                 except Exception as e:
+                    if debug:
+                        print(format_exc())
                     return jsonify({"error": str(e)}), custom_error
             return wrapper
         return decorator
     def validate_token(self):
+    
+        refresh_token = request.cookies.get("refresh_token")
+        if not refresh_token:
+            raise HTTPError("Forbidden", 403)
+        
         token = request.headers.get("Authorization")
+        if not token:
+            raise HTTPError("Unauthorized", 401)
         token = token.split(" ")
         if token[0] != "Bearer":
             raise HTTPError("Invalid token", 401)

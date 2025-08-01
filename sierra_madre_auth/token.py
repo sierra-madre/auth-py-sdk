@@ -3,11 +3,14 @@ from sierra_madre_core.errors import HTTPError
 import jwt
 from jwt import ExpiredSignatureError, InvalidTokenError
 from datetime import datetime, timedelta
+from sierra_madre_auth.utils import get_user_by_id
 
 
-def generate_jwt(user_id: str, secret_key: str, algorithm: str, expiration_time_minutes: int) -> str:
+def generate_jwt(user_id: str,name: str, secret_key: str, algorithm: str, expiration_time_minutes: int) -> str:
+    
     payload = {
         "id_user": user_id,
+        "name": name,
         "timestamp": datetime.utcnow().isoformat(),
         "exp": datetime.utcnow() + timedelta(minutes=expiration_time_minutes)  
     }
