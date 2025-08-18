@@ -3,13 +3,17 @@ name: Release Python SDK
 on:
   push:
     tags:
-      - "v*.*.*"  # Ej: v0.1.0
+      - "v*.*.*"
 
 jobs:
   build-release:
-    name: Build and Release Python SDK
     runs-on: ubuntu-latest
-    
+
+    permissions:
+      contents: write
+
+    env:
+      POETRY_VIRTUALENVS_CREATE: false
 
     steps:
       - name: Checkout code
@@ -25,17 +29,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
 
-      - name: Install dependencies (without venv)
-        run: poetry install --no-root
+      - name: Authenticate to GitHub for private .whl access
+        run: |
+          echo "machine github.com" >> ~/.netrc
+          echo "login ${{ secrets.GH_USERNAME }}" >> ~/.netrc
+          echo "password ${{ secrets.GH_PAT }}" >> ~/.netrc
 
-      - name: Build package
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Build SDK
         run: poetry build
 
-      - name: Upload to GitHub Release
+      - name: Upload release artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.whl
             dist/*.tar.gz
         env:
-          GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
