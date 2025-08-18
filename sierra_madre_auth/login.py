@@ -126,11 +126,18 @@ def get_current_user(auth_config: AuthConfig):
             raise HTTPError("Invalid refresh token", 403)
         
         # Get user from database
-        
+        access_token = generate_jwt(
+        user_id,
+        payload.get("name"),
+        auth_config.password_config.password_hash_key, 
+        auth_config.password_config.algorithm, 
+        auth_config.token_config.token_expiration_time_minutes
+        )
         
             
         
         return jsonify({
+            "access_token" : access_token,
             "user": {
                 "user_id": payload.get("id_user"),
                 "name": payload.get("name"),

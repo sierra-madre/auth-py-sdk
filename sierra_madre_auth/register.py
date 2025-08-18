@@ -6,7 +6,6 @@ from sierra_madre_auth.models import Users
 from sierra_madre_auth.config import AuthConfig
 #Register user, must be used with handle_endpoint decorator from sierra_madre_core
 def register_user(auth_config: AuthConfig):
-    print(auth_config.autoconfirm_users)
     user = RegisterUserRequestSchema.model_validate(request.json)
     #Verify if password is valid according to the password config
     auth_config.password_config.validate_password_security_level(user.password)
