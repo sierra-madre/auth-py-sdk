@@ -11,6 +11,7 @@ __pycache__/
 *.sock
 
 # Distribution / packaging
+.netrc
 .Python
 build/
 develop-eggs/

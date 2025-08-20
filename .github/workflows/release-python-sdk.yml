@@ -1,51 +1,49 @@
-name: Release Python SDK
+name: Publish Python SDK
 
 on:
   push:
     tags:
-      - "v*.*.*"
+      - 'v*.*.*'
 
 jobs:
-  build-release:
+  publish:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
-    env:
-      POETRY_VIRTUALENVS_CREATE: false
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: '3.9'
 
       - name: Install Poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
+        run: pip install poetry
 
-      - name: Authenticate to GitHub for private .whl access
-        run: |
-          echo "machine github.com" >> ~/.netrc
-          echo "login ${{ secrets.GH_USERNAME }}" >> ~/.netrc
-          echo "password ${{ secrets.GH_PAT }}" >> ~/.netrc
-
-      - name: Install dependencies
-        run: poetry install
-
-      - name: Build SDK
-        run: poetry build
-
-      - name: Upload release artifacts
-        uses: softprops/action-gh-release@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          files: |
-            dist/*.whl
-            dist/*.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Set CodeArtifact Token and URL
+        id: codeartifact-login
+        run: |
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+            --domain ${{ secrets.CODEARTIFACT_DOMAIN }} \
+            --domain-owner ${{ secrets.CODEARTIFACT_DOMAIN_OWNER }} \
+            --region ${{ secrets.AWS_REGION }} \
+            --query authorizationToken \
+            --output text)
+
+          echo "POETRY_HTTP_BASIC_CODEARTIFACT_USERNAME=aws" >> $GITHUB_ENV
+          echo "POETRY_HTTP_BASIC_CODEARTIFACT_PASSWORD=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+          echo "POETRY_REPOSITORIES_CODEARTIFACT_URL=https://${{ secrets.CODEARTIFACT_DOMAIN }}-${{ secrets.CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.${{ secrets.AWS_REGION }}.amazonaws.com/pypi/${{ secrets.CODEARTIFACT_REPOSITORY }}/" >> $GITHUB_ENV
+
+      - name: Build and publish
+        run: |
+          poetry config repositories.codeartifact $POETRY_REPOSITORIES_CODEARTIFACT_URL
+          poetry config http-basic.codeartifact $POETRY_HTTP_BASIC_CODEARTIFACT_USERNAME $POETRY_HTTP_BASIC_CODEARTIFACT_PASSWORD
+          poetry publish --build -r codeartifact
